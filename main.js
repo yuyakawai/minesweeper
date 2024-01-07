@@ -76,16 +76,20 @@ const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
     console.log(this.isMine);
   },
 
+  open() {
+    if (this.isMine) {
+      this.element.textContent = "💥";
+      gameStatus.isGameOver = true;
+    } else {
+    }
+  },
+
   handleButtonDown(e) {
     e.preventDefault();
     e.target.style.border = "1px solid #808080";
     e.target.style.backgroundColor = "#d3d3d3";
 
-    console.log(e.target);
-    if (this.isMine) {
-      e.target.textContent = "💥";
-      gameStatus.isGameOver = true;
-    }
+    console.log(cells[0].open());
   },
 }));
 
