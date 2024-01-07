@@ -6,7 +6,7 @@ const mainContainer = {
 
 const screenContainer = {
   element: null,
-  width: mainContainer.width * 0.9,
+  width: mainContainer.width * 0.9375,
   height: mainContainer.height * 0.75,
 };
 
@@ -39,57 +39,59 @@ const controllerContainer = {
   },
 };
 
-const blockRow = 5;
-const blockCol = 7;
-const blockPadding = 10;
+const cellSize = 30;
+const cellRow = Math.trunc(screenContainer.width / cellSize);
+const cellCol = Math.trunc(screenContainer.height / cellSize);
+const mineCount = 10;
 
-const blocks = Array.from({ length: blockRow * blockCol }).map((_, index) => ({
+const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
   element: null,
-  width: 45,
-  height: 15,
   x: 0,
   y: 0,
+  isMine: false,
   isActve: true,
-  color: null,
   init() {
-    this.x = (index % blockRow) * (this.width + blockPadding) + blockPadding;
-    this.y =
-      Math.trunc(index / blockRow) * (this.height + blockPadding) +
-      blockPadding;
-    this.color = `hsl(${
-      (Math.trunc(index / blockRow) * 360) / blockCol
-    }, 100%, 50%)`;
+    this.x = index % cellRow;
+    this.y = Math.trunc(index / cellRow);
     this.element = document.createElement("div");
     this.element.style.position = "absolute";
-    this.element.style.width = this.width + "px";
-    this.element.style.height = this.height + "px";
-    this.element.style.left = this.x + "px";
-    this.element.style.top = this.y + "px";
-    this.element.style.backgroundColor = this.color;
+    this.element.style.width = cellSize + "px";
+    this.element.style.height = cellSize + "px";
+    this.element.style.left = this.x * cellSize + "px";
+    this.element.style.top = this.y * cellSize + "px";
+    this.element.style.border = "3px ridge #cb986f";
+    this.element.style.backgroundColor = "#ccb28e";
+    this.element.style.boxSizing = "border-box";
     screenContainer.element.appendChild(this.element);
-  },
-  update() {
-    if (this.isActve === false) {
-      return;
+
+    if (window.ontouchstart === null) {
+      this.element.ontouchstart = this.handleButtonDown;
+    } else {
+      this.element.onpointerdown = this.handleButtonDown;
     }
+  },
 
-    this.element.style.left = this.x + "px";
-    this.element.style.top = this.y + "px";
+  setMine() {
+    this.isMine = true;
+    console.log(this.isMine);
+  },
 
-    if (
-      ball.x + ball.radius > this.x &&
-      ball.x - ball.radius < this.x + this.width &&
-      ball.y + ball.radius > this.y &&
-      ball.y - ball.radius < this.y + this.height
-    ) {
-      ball.dy *= -1;
-      this.isActve = false;
-      this.element.style.display = "none";
+  handleButtonDown(e) {
+    e.preventDefault();
+    e.target.style.border = "1px solid #808080";
+    e.target.style.backgroundColor = "#d3d3d3";
+
+    console.log(e.target);
+    if (this.isMine) {
+      e.target.textContent = "💥";
+      gameStatus.isGameOver = true;
     }
   },
 }));
 
-let isGameOver = false;
+const gameStatus = {
+  isGameOver: false,
+};
 
 const init = () => {
   mainContainer.element = document.getElementById("main-container");
@@ -135,7 +137,8 @@ const init = () => {
   mainContainer.element.appendChild(controllerContainer.element);
 
   initController();
-
+  cells.forEach((cell) => cell.init());
+  cells.forEach((cell) => cell.setMine());
   tick();
 };
 
@@ -237,23 +240,7 @@ const showGameOverMessage = () => {
 };
 
 const tick = () => {
-  if (controllerContainer.status.leftButtonPressed) {
-    paddle.moveLeft();
-  }
-  if (controllerContainer.status.rightButtonPressed) {
-    paddle.moveRight();
-  }
-
-  ball.update();
-  paddle.update();
-  blocks.forEach((block) => block.update());
-
-  if (blocks.every((block) => block.isActve === false)) {
-    showGameClearMessage();
-    return;
-  }
-
-  if (isGameOver) {
+  if (gameStatus.isGameOver) {
     showGameOverMessage();
     return;
   }
