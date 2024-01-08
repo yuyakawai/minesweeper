@@ -62,12 +62,16 @@ const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
     this.element.style.border = "3px ridge #cb986f";
     this.element.style.backgroundColor = "#ccb28e";
     this.element.style.boxSizing = "border-box";
+    this.element.style.fontSize = cellSize * 0.7 + "px";
+    this.element.style.display = "flex";
+    this.element.style.alignItems = "center";
+    this.element.style.justifyContent = "center";
     screenContainer.element.appendChild(this.element);
 
     if (window.ontouchstart === null) {
-      this.element.ontouchstart = this.handleButtonDown;
+      this.element.ontouchstart = this.handleButtonDown(this);
     } else {
-      this.element.onpointerdown = this.handleButtonDown;
+      this.element.onpointerdown = this.handleButtonDown(this);
     }
   },
 
@@ -84,12 +88,13 @@ const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
     }
   },
 
-  handleButtonDown(e) {
-    e.preventDefault();
-    e.target.style.border = "1px solid #808080";
-    e.target.style.backgroundColor = "#d3d3d3";
-
-    console.log(cells[0].open());
+  handleButtonDown(selfObject) {
+    return (e) => {
+      e.preventDefault();
+      e.target.style.border = "1px solid #808080";
+      e.target.style.backgroundColor = "#d3d3d3";
+      selfObject.open();
+    };
   },
 }));
 
@@ -142,8 +147,10 @@ const init = () => {
 
   initController();
   cells.forEach((cell) => cell.init());
-  cells.forEach((cell) => cell.setMine());
-  tick();
+
+  const index = Math.trunc(Math.random() * cells.length);
+  cells[index].setMine();
+  console.log(cells.length);
 };
 
 const initController = () => {
@@ -254,4 +261,5 @@ const tick = () => {
 
 window.onload = () => {
   init();
+  tick();
 };
