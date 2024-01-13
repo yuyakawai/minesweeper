@@ -23,16 +23,16 @@ const controllerContainer = {
   pressedButtonNum: 0,
   buttonList: ["🔨", "🚩"],
   status: {
-    leftButtonPressed: false,
-    rightButtonPressed: false,
+    hammerButtonPressed: true,
+    flagButtonPressed: false,
   },
   changeStatus: (buttonText, isPressed) => {
     switch (buttonText) {
-      case "◀":
-        controllerContainer.status.leftButtonPressed = isPressed;
+      case "🔨":
+        controllerContainer.status.hammerButtonPressed = isPressed;
         break;
-      case "▶":
-        controllerContainer.status.rightButtonPressed = isPressed;
+      case "🚩":
+        controllerContainer.status.flagButtonPressed = isPressed;
         break;
       default:
         // empty
