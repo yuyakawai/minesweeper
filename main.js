@@ -100,7 +100,7 @@ const controller = {
 };
 
 const gameParameter = Object.freeze({
-  remainingTime: 30,
+  remainingTime: 180,
 });
 
 const gameStatus = {
@@ -114,7 +114,7 @@ const gameStatus = {
 const cellSize = 30;
 const cellRow = Math.trunc(screenContainer.width / cellSize);
 const cellCol = Math.trunc(screenContainer.height / cellSize);
-const mineCount = 3;
+const mineCount = 15;
 
 const init = () => {
   mainContainer.element = document.getElementById("main-container");
@@ -245,6 +245,10 @@ const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
       return;
     }
 
+    if (this.element.textContent === "🚩") {
+      return;
+    }
+
     if (this.isMine) {
       this.element.textContent = "💥";
       gameStatus.isGameOver = true;
@@ -263,39 +267,41 @@ const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
       [1, 1],
     ];
 
-    let openTarget = [];
-    openTarget.push(this);
+    let openTargetCells = [this];
 
-    while (openTarget.length) {
-      const target = openTarget.pop();
+    while (openTargetCells.length) {
+      const target = openTargetCells.pop();
 
       if (target.isOpen) {
         continue;
       }
+
       target.isOpen = true;
       let mineCount = 0;
-      let tp = [];
+      let nextCells = [];
       directions.forEach(([dx, dy]) => {
-        if (target.x + dx < 0 || target.x + dx >= cellRow) {
-          return;
-        }
-        if (target.y + dy < 0 || target.y + dy >= cellCol) {
+        if (
+          target.x + dx < 0 ||
+          target.x + dx >= cellRow ||
+          target.y + dy < 0 ||
+          target.y + dy >= cellCol
+        ) {
           return;
         }
 
-        tp.push(target.getCell(target.x + dx, target.y + dy));
+        nextCells.push(target.getCell(target.x + dx, target.y + dy));
         if (target.getCell(target.x + dx, target.y + dy).isMine) {
           mineCount++;
         }
       });
 
       if (mineCount === 0) {
-        openTarget.push(...tp);
+        openTargetCells.push(...nextCells);
       }
 
       target.element.textContent = mineCount === 0 ? "" : mineCount;
 
-      if (this.checkGameClear()) {
+      if (cells.every((cell) => cell.isOpen || cell.isMine)) {
         gameStatus.isGameClear = true;
         cells
           .filter((cell) => cell.isMine)
@@ -303,10 +309,6 @@ const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
         showGameClearMessage();
       }
     }
-  },
-
-  checkGameClear() {
-    return cells.every((cell) => cell.isOpen || cell.isMine);
   },
 
   handleButtonDown(selfObject) {
