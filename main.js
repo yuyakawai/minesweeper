@@ -42,14 +42,14 @@ const controllerContainer = {
 const cellSize = 30;
 const cellRow = Math.trunc(screenContainer.width / cellSize);
 const cellCol = Math.trunc(screenContainer.height / cellSize);
-const mineCount = 10;
+const mineCount = 3;
 
 const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
   element: null,
   x: 0,
   y: 0,
   isMine: false,
-  isActve: true,
+  isOpen: false,
   init() {
     this.x = index % cellRow;
     this.y = Math.trunc(index / cellRow);
@@ -62,7 +62,7 @@ const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
     this.element.style.border = "3px ridge #cb986f";
     this.element.style.backgroundColor = "#ccb28e";
     this.element.style.boxSizing = "border-box";
-    this.element.style.fontSize = cellSize * 0.7 + "px";
+    this.element.style.fontSize = cellSize * 0.6 + "px";
     this.element.style.display = "flex";
     this.element.style.alignItems = "center";
     this.element.style.justifyContent = "center";
@@ -83,10 +83,20 @@ const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
     return cells[y * cellRow + x];
   },
 
+  update() {
+    cells
+      .filter((cell) => cell.isOpen)
+      .forEach((cell) => {
+        cell.element.style.border = "1px solid #808080";
+        cell.element.style.backgroundColor = "#d3d3d3";
+      });
+  },
+
   open() {
     if (this.isMine) {
       this.element.textContent = "💥";
       gameStatus.isGameOver = true;
+      showGameOverMessage();
       return;
     }
 
@@ -101,13 +111,18 @@ const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
       [1, 1],
     ];
 
-    console.log("open");
     let openTarget = [];
     openTarget.push(this);
 
     while (openTarget.length) {
       const target = openTarget.pop();
+
+      if (target.isOpen) {
+        continue;
+      }
+      target.isOpen = true;
       let mineCount = 0;
+      let tp = [];
       directions.forEach(([dx, dy]) => {
         if (target.x + dx < 0 || target.x + dx >= cellRow) {
           return;
@@ -116,29 +131,47 @@ const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
           return;
         }
 
-        if (target.getCell(this.x + dx, this.y + dy).isMine) {
+        tp.push(target.getCell(target.x + dx, target.y + dy));
+        if (target.getCell(target.x + dx, target.y + dy).isMine) {
           mineCount++;
-        } else {
-          openTarget.push(this.getCell(this.x + dx, this.y + dy));
         }
       });
 
-      console.log(openTarget);
+      if (mineCount === 0) {
+        openTarget.push(...tp);
+      }
+
+      console.log(openTarget.length);
       target.element.textContent = mineCount === 0 ? "" : mineCount;
+
+      if (this.checkGameClear()) {
+        gameStatus.isGameClear = true;
+        cells
+          .filter((cell) => cell.isMine)
+          .forEach((cell) => (cell.element.textContent = "💣"));
+        showGameClearMessage();
+      }
     }
+  },
+
+  checkGameClear() {
+    return cells.every((cell) => cell.isOpen || cell.isMine);
   },
 
   handleButtonDown(selfObject) {
     return (e) => {
       e.preventDefault();
-      e.target.style.border = "1px solid #808080";
-      e.target.style.backgroundColor = "#d3d3d3";
+      if (gameStatus.isGameClear || gameStatus.isGameOver) {
+        return;
+      }
       selfObject.open();
+      selfObject.update();
     };
   },
 }));
 
 const gameStatus = {
+  isGameClear: false,
   isGameOver: false,
 };
 
@@ -268,7 +301,7 @@ const showGameClearMessage = () => {
   messageElement.style.display = "flex";
   messageElement.style.alignItems = "center";
   messageElement.style.justifyContent = "center";
-  messageElement.style.color = "yellow";
+  messageElement.style.color = "blue";
   messageElement.style.fontSize = "32px";
   messageElement.textContent = "Game Clear !!";
   screenContainer.element.appendChild(messageElement);
@@ -290,8 +323,7 @@ const showGameOverMessage = () => {
 };
 
 const tick = () => {
-  if (gameStatus.isGameOver) {
-    showGameOverMessage();
+  if (gameStatus.isGameClear || gameStatus.isGameOver) {
     return;
   }
 
@@ -300,5 +332,4 @@ const tick = () => {
 
 window.onload = () => {
   init();
-  tick();
 };
