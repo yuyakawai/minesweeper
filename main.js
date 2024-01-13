@@ -20,28 +20,82 @@ const controllerContainer = {
   element: null,
   width: mainContainer.width * 0.9,
   height: mainContainer.height * 0.15,
+};
+
+const controller = {
   pressedButtonNum: 0,
-  buttonList: ["🔨", "🚩"],
-  status: {
-    hammerButtonPressed: true,
-    flagButtonPressed: false,
+  buttons: [
+    { name: "🔨", element: null, isPressed: true },
+    { name: "🚩", element: null, isPressed: false },
+  ],
+
+  init: () => {
+    controller.buttons.forEach((button) => {
+      let buttonElement = document.createElement("div");
+      buttonElement.style.position = "relative";
+      buttonElement.style.width = controllerContainer.width * 0.35 + "px";
+      buttonElement.style.height = controllerContainer.height * 0.5 + "px";
+      buttonElement.style.margin = "15px";
+      buttonElement.style.fontSize = controllerContainer.width * 0.1 + "px";
+      buttonElement.style.backgroundColor = "orange";
+      buttonElement.style.borderBottom = "5px solid #b84c00";
+      buttonElement.style.borderRadius = "7px";
+      buttonElement.style.boxSizing = "border-box";
+      buttonElement.style.cursor = "pointer";
+      buttonElement.style.display = "flex";
+      buttonElement.style.alignItems = "center";
+      buttonElement.style.justifyContent = "center";
+      buttonElement.textContent = button.name;
+      button.element = buttonElement;
+      controllerContainer.element.appendChild(buttonElement);
+
+      const handleButtonDown = (e) => {
+        e.preventDefault();
+        controller.pressedButtonNum++;
+        if (controller.pressedButtonNum >= 2) {
+          return;
+        }
+        controller.changeStatus(e.target.textContent, !button.isPressed);
+      };
+
+      const handleButtonUp = (e) => {
+        e.preventDefault();
+        controller.pressedButtonNum--;
+      };
+
+      if (window.ontouchstart === null) {
+        buttonElement.ontouchstart = handleButtonDown;
+        buttonElement.ontouchend = handleButtonUp;
+      } else {
+        buttonElement.onpointerdown = handleButtonDown;
+        buttonElement.onpointerup = handleButtonUp;
+      }
+    });
+
+    controller.update();
   },
+
   changeStatus: (buttonText, isPressed) => {
-    switch (buttonText) {
-      case "🔨":
-        controllerContainer.status.hammerButtonPressed = isPressed;
-        break;
-      case "🚩":
-        controllerContainer.status.flagButtonPressed = isPressed;
-        break;
-      default:
-        // empty
-        break;
-    }
+    controller.buttons.forEach((button) => {
+      if (button.name === buttonText) {
+        button.isPressed = isPressed;
+      } else {
+        button.isPressed = !isPressed;
+      }
+    });
+    controller.update();
   },
-  resetStatus: () => {
-    controllerContainer.status.leftButtonPressed = false;
-    controllerContainer.status.rightButtonPressed = false;
+
+  update: () => {
+    controller.buttons.forEach((button) => {
+      if (button.isPressed) {
+        button.element.style.borderBottom = "1px solid #b84c00";
+        button.element.style.backgroundColor = "#b84c00";
+      } else {
+        button.element.style.borderBottom = "5px solid #b84c00";
+        button.element.style.backgroundColor = "orange";
+      }
+    });
   },
 };
 
@@ -116,68 +170,20 @@ const init = () => {
   controllerContainer.element.style.justifyContent = "center";
   mainContainer.element.appendChild(controllerContainer.element);
 
-  initController();
+  controller.init();
   cells.forEach((cell) => cell.init());
   [...Array(mineCount)].map(() =>
     cells[Math.trunc(Math.random() * cells.length)].setMine()
   );
-};
-
-const initController = () => {
-  controllerContainer.buttonList.forEach((name) => {
-    let buttonElement = document.createElement("div");
-    buttonElement.style.position = "relative";
-    buttonElement.style.width = controllerContainer.width * 0.35 + "px";
-    buttonElement.style.height = controllerContainer.height * 0.5 + "px";
-    buttonElement.style.margin = "15px";
-    buttonElement.style.fontSize = controllerContainer.width * 0.1 + "px";
-    buttonElement.style.backgroundColor = "orange";
-    buttonElement.style.borderBottom = "5px solid #b84c00";
-    buttonElement.style.borderRadius = "7px";
-    buttonElement.style.boxSizing = "border-box";
-    buttonElement.style.cursor = "pointer";
-    buttonElement.style.display = "flex";
-    buttonElement.style.alignItems = "center";
-    buttonElement.style.justifyContent = "center";
-    buttonElement.textContent = name;
-    controllerContainer.element.appendChild(buttonElement);
-
-    const handleButtonDown = (e) => {
-      e.preventDefault();
-      controllerContainer.pressedButtonNum++;
-      if (controllerContainer.pressedButtonNum >= 2) {
-        return;
-      }
-      e.target.style.borderBottom = "1px solid #b84c00";
-      e.target.style.backgroundColor = "#b84c00";
-      controllerContainer.changeStatus(e.target.textContent, true);
-    };
-
-    const handleButtonUp = (e) => {
-      e.preventDefault();
-      controllerContainer.pressedButtonNum--;
-      e.target.style.borderBottom = "5px solid #b84c00";
-      e.target.style.backgroundColor = "orange";
-      controllerContainer.changeStatus(e.target.textContent, false);
-    };
-
-    if (window.ontouchstart === null) {
-      buttonElement.ontouchstart = handleButtonDown;
-      buttonElement.ontouchend = handleButtonUp;
-    } else {
-      buttonElement.onpointerdown = handleButtonDown;
-      buttonElement.onpointerup = handleButtonUp;
-    }
-  });
 
   document.onkeydown = (e) => {
     e.preventDefault();
     switch (e.key) {
       case "ArrowLeft":
-        controllerContainer.changeStatus("◀", true);
+        controller.changeStatus("◀", true);
         break;
       case "ArrowRight":
-        controllerContainer.changeStatus("▶", true);
+        controller.changeStatus("▶", true);
         break;
       default:
         // empty
@@ -185,7 +191,6 @@ const initController = () => {
     }
   };
   document.onkeyup = (e) => {
-    controllerContainer.resetStatus();
     e.preventDefault();
   };
 };
