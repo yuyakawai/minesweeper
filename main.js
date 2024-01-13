@@ -10,6 +10,12 @@ const screenContainer = {
   height: mainContainer.height * 0.75,
 };
 
+const timeMessageContainer = {
+  element: null,
+  width: mainContainer.width * 0.9375,
+  height: mainContainer.height * 0.05,
+};
+
 const controllerContainer = {
   element: null,
   width: mainContainer.width * 0.9,
@@ -39,10 +45,22 @@ const controllerContainer = {
   },
 };
 
+const gameParameter = Object.freeze({
+  remainingTime: 30,
+});
+
+const gameStatus = {
+  isGameStart: false,
+  isGameClear: false,
+  isGameOver: false,
+  startTime: 0,
+  remainingTime: 0,
+};
+
 const cellSize = 30;
 const cellRow = Math.trunc(screenContainer.width / cellSize);
 const cellCol = Math.trunc(screenContainer.height / cellSize);
-const mineCount = 3;
+const mineCount = 10;
 
 const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
   element: null,
@@ -93,6 +111,10 @@ const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
   },
 
   open() {
+    if (gameStatus.isGameStart === false) {
+      gameStatus.isGameStart = true;
+    }
+
     if (this.isMine) {
       this.element.textContent = "💥";
       gameStatus.isGameOver = true;
@@ -141,7 +163,6 @@ const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
         openTarget.push(...tp);
       }
 
-      console.log(openTarget.length);
       target.element.textContent = mineCount === 0 ? "" : mineCount;
 
       if (this.checkGameClear()) {
@@ -169,11 +190,6 @@ const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
     };
   },
 }));
-
-const gameStatus = {
-  isGameClear: false,
-  isGameOver: false,
-};
 
 const init = () => {
   mainContainer.element = document.getElementById("main-container");
@@ -205,6 +221,17 @@ const init = () => {
   screenContainer.element.style.justifyContent = "center";
   screenContainer.element.style.backgroundColor = "black";
   mainContainer.element.appendChild(screenContainer.element);
+
+  timeMessageContainer.element = document.createElement("div");
+  timeMessageContainer.element.style.position = "relative";
+  timeMessageContainer.element.style.width = timeMessageContainer.width + "px";
+  timeMessageContainer.element.style.height =
+    timeMessageContainer.height + "px";
+  timeMessageContainer.element.style.margin = "1px";
+  timeMessageContainer.element.style.fontSize = "20px";
+  timeMessageContainer.element.textContent =
+    "⌛ " + gameParameter.remainingTime.toFixed(2);
+  mainContainer.element.appendChild(timeMessageContainer.element);
 
   controllerContainer.element = document.createElement("div");
   controllerContainer.element.style.position = "relative";
@@ -327,9 +354,30 @@ const tick = () => {
     return;
   }
 
+  if (gameStatus.isGameStart) {
+    if (gameStatus.startTime === 0) {
+      gameStatus.startTime = performance.now();
+    }
+
+    gameStatus.remainingTime = Math.max(
+      0,
+      gameParameter.remainingTime -
+        (performance.now() - gameStatus.startTime) / 1000
+    );
+
+    timeMessageContainer.element.textContent =
+      "⌛ " + gameStatus.remainingTime.toFixed(2);
+
+    if (gameStatus.remainingTime <= 0) {
+      gameStatus.isGameOver = true;
+      showGameOverMessage();
+    }
+  }
+
   requestAnimationFrame(tick);
 };
 
 window.onload = () => {
   init();
+  tick();
 };
