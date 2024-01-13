@@ -114,7 +114,7 @@ const gameStatus = {
 const cellSize = 30;
 const cellRow = Math.trunc(screenContainer.width / cellSize);
 const cellCol = Math.trunc(screenContainer.height / cellSize);
-const mineCount = 10;
+const mineCount = 3;
 
 const init = () => {
   mainContainer.element = document.getElementById("main-container");
@@ -175,24 +175,6 @@ const init = () => {
   [...Array(mineCount)].map(() =>
     cells[Math.trunc(Math.random() * cells.length)].setMine()
   );
-
-  document.onkeydown = (e) => {
-    e.preventDefault();
-    switch (e.key) {
-      case "ArrowLeft":
-        controller.changeStatus("◀", true);
-        break;
-      case "ArrowRight":
-        controller.changeStatus("▶", true);
-        break;
-      default:
-        // empty
-        break;
-    }
-  };
-  document.onkeyup = (e) => {
-    e.preventDefault();
-  };
 };
 
 const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
@@ -246,6 +228,21 @@ const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
   open() {
     if (gameStatus.isGameStart === false) {
       gameStatus.isGameStart = true;
+    }
+
+    let isFlagMode = false;
+    if (
+      controller.buttons.filter((button) => button.name === "🚩").shift()
+        .isPressed
+    ) {
+      isFlagMode = true;
+    }
+
+    if (isFlagMode && this.isOpen === false) {
+      this.element.textContent === ""
+        ? (this.element.textContent = "🚩")
+        : (this.element.textContent = "");
+      return;
     }
 
     if (this.isMine) {
@@ -375,6 +372,9 @@ const tick = () => {
 
     if (gameStatus.remainingTime <= 0) {
       gameStatus.isGameOver = true;
+      cells
+        .filter((cell) => cell.isMine)
+        .forEach((cell) => (cell.element.textContent = "💣"));
       showGameOverMessage();
     }
   }
