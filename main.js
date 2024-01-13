@@ -77,14 +77,54 @@ const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
 
   setMine() {
     this.isMine = true;
-    console.log(this.isMine);
+  },
+
+  getCell(x, y) {
+    return cells[y * cellRow + x];
   },
 
   open() {
     if (this.isMine) {
       this.element.textContent = "💥";
       gameStatus.isGameOver = true;
-    } else {
+      return;
+    }
+
+    const directions = [
+      [-1, -1],
+      [0, -1],
+      [1, -1],
+      [-1, 0],
+      [1, 0],
+      [-1, 1],
+      [0, 1],
+      [1, 1],
+    ];
+
+    console.log("open");
+    let openTarget = [];
+    openTarget.push(this);
+
+    while (openTarget.length) {
+      const target = openTarget.pop();
+      let mineCount = 0;
+      directions.forEach(([dx, dy]) => {
+        if (target.x + dx < 0 || target.x + dx >= cellRow) {
+          return;
+        }
+        if (target.y + dy < 0 || target.y + dy >= cellCol) {
+          return;
+        }
+
+        if (target.getCell(this.x + dx, this.y + dy).isMine) {
+          mineCount++;
+        } else {
+          openTarget.push(this.getCell(this.x + dx, this.y + dy));
+        }
+      });
+
+      console.log(openTarget);
+      target.element.textContent = mineCount === 0 ? "" : mineCount;
     }
   },
 
@@ -147,10 +187,9 @@ const init = () => {
 
   initController();
   cells.forEach((cell) => cell.init());
-
-  const index = Math.trunc(Math.random() * cells.length);
-  cells[index].setMine();
-  console.log(cells.length);
+  [...Array(mineCount)].map(() =>
+    cells[Math.trunc(Math.random() * cells.length)].setMine()
+  );
 };
 
 const initController = () => {
