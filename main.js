@@ -62,6 +62,134 @@ const cellRow = Math.trunc(screenContainer.width / cellSize);
 const cellCol = Math.trunc(screenContainer.height / cellSize);
 const mineCount = 10;
 
+const init = () => {
+  mainContainer.element = document.getElementById("main-container");
+  mainContainer.element.style.position = "relative";
+  mainContainer.element.style.width = mainContainer.width + "px";
+  mainContainer.element.style.height = mainContainer.height + "px";
+  mainContainer.element.style.margin = "5px";
+  mainContainer.element.style.fontFamily =
+    "'Helvetica Neue',Arial, 'Hiragino Kaku Gothic ProN','Hiragino Sans', Meiryo, sans-serif";
+  mainContainer.element.style.backgroundColor = "#f5deb3";
+  mainContainer.element.style.border = "2px solid #deb887";
+  mainContainer.element.style.boxSizing = "border-box";
+  mainContainer.element.style.borderRadius = "5px";
+  mainContainer.element.style.display = "flex";
+  mainContainer.element.style.alignItems = "center";
+  mainContainer.element.style.justifyContent = "center";
+  mainContainer.element.style.flexDirection = "column";
+  mainContainer.element.style.overflow = "hidden";
+  mainContainer.element.style.userSelect = "none";
+  mainContainer.element.style.webkitUserSelect = "none";
+
+  screenContainer.element = document.createElement("div");
+  screenContainer.element.style.position = "relative";
+  screenContainer.element.style.width = screenContainer.width + "px";
+  screenContainer.element.style.height = screenContainer.height + "px";
+  screenContainer.element.style.margin = "1px";
+  screenContainer.element.style.display = "flex";
+  screenContainer.element.style.alignItems = "center";
+  screenContainer.element.style.justifyContent = "center";
+  screenContainer.element.style.backgroundColor = "black";
+  mainContainer.element.appendChild(screenContainer.element);
+
+  timeMessageContainer.element = document.createElement("div");
+  timeMessageContainer.element.style.position = "relative";
+  timeMessageContainer.element.style.width = timeMessageContainer.width + "px";
+  timeMessageContainer.element.style.height =
+    timeMessageContainer.height + "px";
+  timeMessageContainer.element.style.margin = "1px";
+  timeMessageContainer.element.style.fontSize = "20px";
+  timeMessageContainer.element.textContent =
+    "⌛ " + gameParameter.remainingTime.toFixed(2);
+  mainContainer.element.appendChild(timeMessageContainer.element);
+
+  controllerContainer.element = document.createElement("div");
+  controllerContainer.element.style.position = "relative";
+  controllerContainer.element.style.width = controllerContainer.width + "px";
+  controllerContainer.element.style.height = controllerContainer.height + "px";
+  controllerContainer.element.style.margin = "0px";
+  controllerContainer.element.style.fontSize = "32px";
+  controllerContainer.element.style.boxSizing = "border-box";
+  controllerContainer.element.style.display = "flex";
+  controllerContainer.element.style.alignItems = "center";
+  controllerContainer.element.style.justifyContent = "center";
+  mainContainer.element.appendChild(controllerContainer.element);
+
+  initController();
+  cells.forEach((cell) => cell.init());
+  [...Array(mineCount)].map(() =>
+    cells[Math.trunc(Math.random() * cells.length)].setMine()
+  );
+};
+
+const initController = () => {
+  controllerContainer.buttonList.forEach((name) => {
+    let buttonElement = document.createElement("div");
+    buttonElement.style.position = "relative";
+    buttonElement.style.width = controllerContainer.width * 0.35 + "px";
+    buttonElement.style.height = controllerContainer.height * 0.5 + "px";
+    buttonElement.style.margin = "15px";
+    buttonElement.style.fontSize = controllerContainer.width * 0.1 + "px";
+    buttonElement.style.backgroundColor = "orange";
+    buttonElement.style.borderBottom = "5px solid #b84c00";
+    buttonElement.style.borderRadius = "7px";
+    buttonElement.style.boxSizing = "border-box";
+    buttonElement.style.cursor = "pointer";
+    buttonElement.style.display = "flex";
+    buttonElement.style.alignItems = "center";
+    buttonElement.style.justifyContent = "center";
+    buttonElement.textContent = name;
+    controllerContainer.element.appendChild(buttonElement);
+
+    const handleButtonDown = (e) => {
+      e.preventDefault();
+      controllerContainer.pressedButtonNum++;
+      if (controllerContainer.pressedButtonNum >= 2) {
+        return;
+      }
+      e.target.style.borderBottom = "1px solid #b84c00";
+      e.target.style.backgroundColor = "#b84c00";
+      controllerContainer.changeStatus(e.target.textContent, true);
+    };
+
+    const handleButtonUp = (e) => {
+      e.preventDefault();
+      controllerContainer.pressedButtonNum--;
+      e.target.style.borderBottom = "5px solid #b84c00";
+      e.target.style.backgroundColor = "orange";
+      controllerContainer.changeStatus(e.target.textContent, false);
+    };
+
+    if (window.ontouchstart === null) {
+      buttonElement.ontouchstart = handleButtonDown;
+      buttonElement.ontouchend = handleButtonUp;
+    } else {
+      buttonElement.onpointerdown = handleButtonDown;
+      buttonElement.onpointerup = handleButtonUp;
+    }
+  });
+
+  document.onkeydown = (e) => {
+    e.preventDefault();
+    switch (e.key) {
+      case "ArrowLeft":
+        controllerContainer.changeStatus("◀", true);
+        break;
+      case "ArrowRight":
+        controllerContainer.changeStatus("▶", true);
+        break;
+      default:
+        // empty
+        break;
+    }
+  };
+  document.onkeyup = (e) => {
+    controllerContainer.resetStatus();
+    e.preventDefault();
+  };
+};
+
 const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
   element: null,
   x: 0,
@@ -190,134 +318,6 @@ const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
     };
   },
 }));
-
-const init = () => {
-  mainContainer.element = document.getElementById("main-container");
-  mainContainer.element.style.position = "relative";
-  mainContainer.element.style.width = mainContainer.width + "px";
-  mainContainer.element.style.height = mainContainer.height + "px";
-  mainContainer.element.style.margin = "5px";
-  mainContainer.element.style.fontFamily =
-    "'Helvetica Neue',Arial, 'Hiragino Kaku Gothic ProN','Hiragino Sans', Meiryo, sans-serif";
-  mainContainer.element.style.backgroundColor = "#f5deb3";
-  mainContainer.element.style.border = "2px solid #deb887";
-  mainContainer.element.style.boxSizing = "border-box";
-  mainContainer.element.style.borderRadius = "5px";
-  mainContainer.element.style.display = "flex";
-  mainContainer.element.style.alignItems = "center";
-  mainContainer.element.style.justifyContent = "center";
-  mainContainer.element.style.flexDirection = "column";
-  mainContainer.element.style.overflow = "hidden";
-  mainContainer.element.style.userSelect = "none";
-  mainContainer.element.style.webkitUserSelect = "none";
-
-  screenContainer.element = document.createElement("div");
-  screenContainer.element.style.position = "relative";
-  screenContainer.element.style.width = screenContainer.width + "px";
-  screenContainer.element.style.height = screenContainer.height + "px";
-  screenContainer.element.style.margin = "1px";
-  screenContainer.element.style.display = "flex";
-  screenContainer.element.style.alignItems = "center";
-  screenContainer.element.style.justifyContent = "center";
-  screenContainer.element.style.backgroundColor = "black";
-  mainContainer.element.appendChild(screenContainer.element);
-
-  timeMessageContainer.element = document.createElement("div");
-  timeMessageContainer.element.style.position = "relative";
-  timeMessageContainer.element.style.width = timeMessageContainer.width + "px";
-  timeMessageContainer.element.style.height =
-    timeMessageContainer.height + "px";
-  timeMessageContainer.element.style.margin = "1px";
-  timeMessageContainer.element.style.fontSize = "20px";
-  timeMessageContainer.element.textContent =
-    "⌛ " + gameParameter.remainingTime.toFixed(2);
-  mainContainer.element.appendChild(timeMessageContainer.element);
-
-  controllerContainer.element = document.createElement("div");
-  controllerContainer.element.style.position = "relative";
-  controllerContainer.element.style.width = controllerContainer.width + "px";
-  controllerContainer.element.style.height = controllerContainer.height + "px";
-  controllerContainer.element.style.margin = "0px";
-  controllerContainer.element.style.fontSize = "32px";
-  controllerContainer.element.style.boxSizing = "border-box";
-  controllerContainer.element.style.display = "flex";
-  controllerContainer.element.style.alignItems = "center";
-  controllerContainer.element.style.justifyContent = "center";
-  mainContainer.element.appendChild(controllerContainer.element);
-
-  initController();
-  cells.forEach((cell) => cell.init());
-  [...Array(mineCount)].map(() =>
-    cells[Math.trunc(Math.random() * cells.length)].setMine()
-  );
-};
-
-const initController = () => {
-  controllerContainer.buttonList.forEach((name) => {
-    let buttonElement = document.createElement("div");
-    buttonElement.style.position = "relative";
-    buttonElement.style.width = controllerContainer.width * 0.35 + "px";
-    buttonElement.style.height = controllerContainer.height * 0.5 + "px";
-    buttonElement.style.margin = "15px";
-    buttonElement.style.fontSize = controllerContainer.width * 0.1 + "px";
-    buttonElement.style.backgroundColor = "orange";
-    buttonElement.style.borderBottom = "5px solid #b84c00";
-    buttonElement.style.borderRadius = "7px";
-    buttonElement.style.boxSizing = "border-box";
-    buttonElement.style.cursor = "pointer";
-    buttonElement.style.display = "flex";
-    buttonElement.style.alignItems = "center";
-    buttonElement.style.justifyContent = "center";
-    buttonElement.textContent = name;
-    controllerContainer.element.appendChild(buttonElement);
-
-    const handleButtonDown = (e) => {
-      e.preventDefault();
-      controllerContainer.pressedButtonNum++;
-      if (controllerContainer.pressedButtonNum >= 2) {
-        return;
-      }
-      e.target.style.borderBottom = "1px solid #b84c00";
-      e.target.style.backgroundColor = "#b84c00";
-      controllerContainer.changeStatus(e.target.textContent, true);
-    };
-
-    const handleButtonUp = (e) => {
-      e.preventDefault();
-      controllerContainer.pressedButtonNum--;
-      e.target.style.borderBottom = "5px solid #b84c00";
-      e.target.style.backgroundColor = "orange";
-      controllerContainer.changeStatus(e.target.textContent, false);
-    };
-
-    if (window.ontouchstart === null) {
-      buttonElement.ontouchstart = handleButtonDown;
-      buttonElement.ontouchend = handleButtonUp;
-    } else {
-      buttonElement.onpointerdown = handleButtonDown;
-      buttonElement.onpointerup = handleButtonUp;
-    }
-  });
-
-  document.onkeydown = (e) => {
-    e.preventDefault();
-    switch (e.key) {
-      case "ArrowLeft":
-        controllerContainer.changeStatus("◀", true);
-        break;
-      case "ArrowRight":
-        controllerContainer.changeStatus("▶", true);
-        break;
-      default:
-        // empty
-        break;
-    }
-  };
-  document.onkeyup = (e) => {
-    controllerContainer.resetStatus();
-    e.preventDefault();
-  };
-};
 
 const showGameClearMessage = () => {
   let messageElement = document.createElement("div");
