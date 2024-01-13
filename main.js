@@ -1,3 +1,17 @@
+const initialRemainingTime = 180;
+const cellSize = 30;
+const cellRow = 10;
+const cellCol = 12;
+const mineCount = 15;
+
+const gameStatus = {
+  isGameStart: false,
+  isGameClear: false,
+  isGameOver: false,
+  startTime: 0,
+  remainingTime: 0,
+};
+
 const mainContainer = {
   element: null,
   width: 320,
@@ -99,23 +113,6 @@ const controller = {
   },
 };
 
-const gameParameter = Object.freeze({
-  remainingTime: 180,
-});
-
-const gameStatus = {
-  isGameStart: false,
-  isGameClear: false,
-  isGameOver: false,
-  startTime: 0,
-  remainingTime: 0,
-};
-
-const cellSize = 30;
-const cellRow = Math.trunc(screenContainer.width / cellSize);
-const cellCol = Math.trunc(screenContainer.height / cellSize);
-const mineCount = 15;
-
 const init = () => {
   mainContainer.element = document.getElementById("main-container");
   mainContainer.element.style.position = "relative";
@@ -155,7 +152,7 @@ const init = () => {
   timeMessageContainer.element.style.margin = "1px";
   timeMessageContainer.element.style.fontSize = "20px";
   timeMessageContainer.element.textContent =
-    "⌛ " + gameParameter.remainingTime.toFixed(2);
+    "⌛ " + initialRemainingTime.toFixed(2);
   mainContainer.element.appendChild(timeMessageContainer.element);
 
   controllerContainer.element = document.createElement("div");
@@ -239,9 +236,7 @@ const cells = Array.from({ length: cellRow * cellCol }).map((_, index) => ({
     }
 
     if (isFlagMode && this.isOpen === false) {
-      this.element.textContent === ""
-        ? (this.element.textContent = "🚩")
-        : (this.element.textContent = "");
+      this.element.textContent = this.element.textContent === "" ? "🚩" : "";
       return;
     }
 
@@ -365,8 +360,7 @@ const tick = () => {
 
     gameStatus.remainingTime = Math.max(
       0,
-      gameParameter.remainingTime -
-        (performance.now() - gameStatus.startTime) / 1000
+      initialRemainingTime - (performance.now() - gameStatus.startTime) / 1000
     );
 
     timeMessageContainer.element.textContent =
